@@ -28,15 +28,12 @@ with open(long_description_filename) as fd:
 setup(
     name=dlint.__name__,
     version=dlint.__version__,
-    description=(
-        "Dlint is a tool for encouraging best coding practices "
-        "and helping ensure we're writing secure Python code."
-    ),
+    description=dlint.__description__,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/duo-labs/dlint',
+    url=dlint.__url__,
     packages=find_packages(),
-    license='BSD-3-Clause',
+    license=dlint.__license__,
     classifiers=[
         'Environment :: Console',
         'License :: OSI Approved :: BSD License',
@@ -47,6 +44,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Security',
         'Topic :: Software Development :: Quality Assurance',
     ],

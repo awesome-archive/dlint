@@ -8,6 +8,7 @@ from __future__ import (
 )
 
 import ast
+import sys
 
 
 def decorator_name(decorator):
@@ -25,18 +26,7 @@ def decorator_name(decorator):
             # E.g. @decorator(argument)
             return decorator.func.id
     else:
-        raise TypeError(type(decorator))
-
-
-def call_name(call):
-    if isinstance(call.func, ast.Attribute):
-        # E.g. cls.func_call(argument)
-        return call.func.attr
-    elif isinstance(call.func, ast.Name):
-        # E.g. func_call(argument)
-        return call.func.id
-    else:
-        raise TypeError(type(call.func))
+        raise TypeError('expected type ast.Attribute, ast.Name, or ast.Call, received {}'.format(type(decorator)))
 
 
 def function_has_inlinecallbacks_decorator(function):
@@ -84,10 +74,16 @@ def non_empty_return(_return):
 
 
 def walk_callback_same_scope(node, callback):
+    is_python_3_5 = sys.version_info >= (3, 5)
+
     # If we change scope, e.g. enter into a new
     # class or function definition, then halt iteration
+    scopes = (ast.ClassDef, ast.FunctionDef)
+    if is_python_3_5:
+        scopes += (ast.AsyncFunctionDef,)
+
     def scope_predicate(inner_node):
-        return not isinstance(inner_node, (ast.ClassDef, ast.FunctionDef))
+        return not isinstance(inner_node, scopes)
 
     walk_callback(node, callback, predicate=scope_predicate)
 
@@ -157,13 +153,37 @@ def kwarg_str(call, kwarg_name, s):
     )
 
 
-def kwarg_attribute(call, kwarg_name, attribute):
+def kwarg_module_path(call, kwarg_name, illegal_module_path, namespace):
     return any(
         keyword.arg == kwarg_name
         and isinstance(keyword.value, (ast.Attribute, ast.Name))
-        and module_path(keyword.value) == attribute
+        and namespace.illegal_module_imported(
+            module_path_str(keyword.value),
+            illegal_module_path
+        )
         for keyword in call.keywords
     )
+
+
+def kwarg_module_path_call(call, kwarg_name, illegal_module_path, namespace):
+    return any(
+        keyword.arg == kwarg_name
+        and isinstance(keyword.value, ast.Call)
+        and isinstance(keyword.value.func, (ast.Attribute, ast.Name))
+        and namespace.illegal_module_imported(
+            module_path_str(keyword.value.func),
+            illegal_module_path
+        )
+        for keyword in call.keywords
+    )
+
+
+def kwarg_any(kwarg_functions):
+    """Resolve kwarg predicates with short-circuit evaluation. This optimization
+    technique means we do not have to evaluate every predicate if one is already
+    true.
+    """
+    return any(kwarg_function() for kwarg_function in kwarg_functions)
 
 
 def module_path(node):
@@ -176,3 +196,28 @@ def module_path(node):
         return [node.id]
     else:
         return []
+
+
+def module_path_str(node):
+    """Return module path as a string instead of a list.
+    E.g. "foo.bar.baz" instead of ["foo", "bar", "baz"].
+    """
+    return ".".join(module_path(node))
+
+
+def same_modules(s1, s2):
+    """Compare two module strings where submodules of an illegal
+    parent module should also be illegal. I.e. blacklisting 'foo.bar'
+    should also make 'foo.bar.baz' illegal.
+
+    The first argument should 'encompass' the second, not the other way
+    around. I.e. passing same_modules('foo', 'foo.bar') will return True,
+    but same_modules('foo.bar', 'foo') will not.
+    """
+    modules1 = s1.split(".")
+    modules2 = s2.split(".")
+
+    return (
+        len(modules1) <= len(modules2)
+        and all(m1 == m2 for (m1, m2) in zip(modules1, modules2))
+    )

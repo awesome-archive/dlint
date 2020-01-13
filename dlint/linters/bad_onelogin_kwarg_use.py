@@ -38,47 +38,47 @@ class BadOneLoginKwargUseLinter(bad_kwarg_use.BadKwargUseLinter):
             )
 
         def insecure_algorithm(call, kwarg_name):
-            # Short-circuit evaluation
-            return any(
-                fn() for fn in [
-                    functools.partial(
-                        tree.kwarg_str,
-                        call,
-                        kwarg_name,
-                        "http://www.w3.org/2000/09/xmldsig#sha1"
-                    ),
-                    functools.partial(
-                        tree.kwarg_str,
-                        call,
-                        kwarg_name,
-                        "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
-                    ),
-                    functools.partial(
-                        tree.kwarg_str,
-                        call,
-                        kwarg_name,
-                        "http://www.w3.org/2000/09/xmldsig#dsa-sha1"
-                    ),
-                    functools.partial(
-                        tree.kwarg_attribute,
-                        call,
-                        kwarg_name,
-                        ["OneLogin_Saml2_Constants", "SHA1"]
-                    ),
-                    functools.partial(
-                        tree.kwarg_attribute,
-                        call,
-                        kwarg_name,
-                        ["OneLogin_Saml2_Constants", "RSA_SHA1"]
-                    ),
-                    functools.partial(
-                        tree.kwarg_attribute,
-                        call,
-                        kwarg_name,
-                        ["OneLogin_Saml2_Constants", "DSA_SHA1"]
-                    ),
-                ]
-            )
+            return tree.kwarg_any([
+                functools.partial(
+                    tree.kwarg_str,
+                    call,
+                    kwarg_name,
+                    "http://www.w3.org/2000/09/xmldsig#sha1"
+                ),
+                functools.partial(
+                    tree.kwarg_str,
+                    call,
+                    kwarg_name,
+                    "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+                ),
+                functools.partial(
+                    tree.kwarg_str,
+                    call,
+                    kwarg_name,
+                    "http://www.w3.org/2000/09/xmldsig#dsa-sha1"
+                ),
+                functools.partial(
+                    tree.kwarg_module_path,
+                    call,
+                    kwarg_name,
+                    "onelogin.saml2.constants.OneLogin_Saml2_Constants.SHA1",
+                    self.namespace
+                ),
+                functools.partial(
+                    tree.kwarg_module_path,
+                    call,
+                    kwarg_name,
+                    "onelogin.saml2.constants.OneLogin_Saml2_Constants.RSA_SHA1",
+                    self.namespace
+                ),
+                functools.partial(
+                    tree.kwarg_module_path,
+                    call,
+                    kwarg_name,
+                    "onelogin.saml2.constants.OneLogin_Saml2_Constants.DSA_SHA1",
+                    self.namespace
+                ),
+            ])
 
         def missing_or_insecure_algorithm(call, kwarg_name):
             return (
@@ -88,52 +88,52 @@ class BadOneLoginKwargUseLinter(bad_kwarg_use.BadKwargUseLinter):
 
         return [
             {
-                "attribute_name": "calculate_x509_fingerprint",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.calculate_x509_fingerprint",
                 "kwarg_name": "alg",
                 "predicate": functools.partial(missing_or_string, "sha1"),
             },
             {
-                "attribute_name": "add_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.add_sign",
                 "kwarg_name": "sign_algorithm",
                 "predicate": missing_or_insecure_algorithm,
             },
             {
-                "attribute_name": "add_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.add_sign",
                 "kwarg_name": "digest_algorithm",
                 "predicate": missing_or_insecure_algorithm,
             },
             {
-                "attribute_name": "validate_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_sign",
                 "kwarg_name": "fingerprintalg",
                 "predicate": functools.partial(missing_or_string, "sha1"),
             },
             {
-                "attribute_name": "validate_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_sign",
                 "kwarg_name": "validatecert",
                 "predicate": missing_or_false,
             },
             {
-                "attribute_name": "validate_metadata_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_metadata_sign",
                 "kwarg_name": "fingerprintalg",
                 "predicate": functools.partial(missing_or_string, "sha1"),
             },
             {
-                "attribute_name": "validate_metadata_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_metadata_sign",
                 "kwarg_name": "validatecert",
                 "predicate": missing_or_false,
             },
             {
-                "attribute_name": "validate_node_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_node_sign",
                 "kwarg_name": "fingerprintalg",
                 "predicate": functools.partial(missing_or_string, "sha1"),
             },
             {
-                "attribute_name": "validate_node_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_node_sign",
                 "kwarg_name": "validatecert",
                 "predicate": missing_or_false,
             },
             {
-                "attribute_name": "validate_binary_sign",
+                "module_path": "onelogin.saml2.utils.OneLogin_Saml2_Utils.validate_binary_sign",
                 "kwarg_name": "algorithm",
                 "predicate": missing_or_insecure_algorithm,
             }

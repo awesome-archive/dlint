@@ -1,8 +1,10 @@
+[![Duo Labs](labs.jpg)](https://duo.com/labs/)
+
 # Dlint
 
 [![Build Status](https://travis-ci.org/duo-labs/dlint.svg?branch=master)](https://travis-ci.org/duo-labs/dlint)
-[![Python Versions](https://img.shields.io/pypi/pyversions/dlint.svg)](https://img.shields.io/pypi/pyversions/dlint.svg)
-[![PyPI Version](https://img.shields.io/pypi/v/dlint.svg)](https://img.shields.io/pypi/v/dlint.svg)
+[![Python Versions](https://img.shields.io/pypi/pyversions/dlint.svg)](https://pypi.org/project/dlint/)
+[![PyPI Version](https://img.shields.io/pypi/v/dlint.svg)](https://pypi.org/project/dlint/)
 
 Dlint is a tool for encouraging best coding practices and helping ensure we're
 writing secure Python code.
@@ -16,6 +18,8 @@ writing secure Python code.
 > For a static analysis project to succeed, developers must feel they benefit
 > from and enjoy using it.
 > - [Lessons from Building Static Analysis Tools at Google](https://cacm.acm.org/magazines/2018/4/226371-lessons-from-building-static-analysis-tools-at-google/fulltext)
+
+For documentation and a list of rules see [docs](https://github.com/duo-labs/dlint/tree/master/docs).
 
 # Installing
 
@@ -33,33 +37,39 @@ Usage: flake8 [options] file file ...
 
 ...
 
-Installed plugins: dlint: 0.5.0, mccabe: 0.5.3, pycodestyle: 2.2.0, pyflakes: 1.3.0
+Installed plugins: dlint: 0.9.2, mccabe: 0.5.3, pycodestyle: 2.2.0, pyflakes: 1.3.0
 ```
 
-Note the `dlint: 0.5.0`.
+Note the `dlint: 0.9.2`.
 
 # Using
 
-Dlint uses `flake8` to perform its linting functionality. This allows us to
-utilize many useful `flake8` features without re-inventing the wheel.
+Dlint uses `flake8` to perform its linting functionality which provides many
+useful features without re-inventing the wheel.
 
 ## CLI
 
 Let's run a simple check:
 
 ```
-$ cat test.py
-#!/usr/bin/env python
-
+$ cat << EOF > test.py
 print("TEST1")
-
 exec('print("TEST2")')
+EOF
+```
+
+```
+$ python test.py
+TEST1
+TEST2
 ```
 
 ```
 $ python -m flake8 --select=DUO test.py
-test.py:5:1: DUO105 use of "exec" not allowed
+test.py:2:1: DUO105 use of "exec" is insecure
 ```
+
+*To learn more about why "exec" is insecure visit [`/docs/linters/DUO105.md`](https://github.com/duo-labs/dlint/blob/master/docs/linters/DUO105.md).*
 
 The `--select=DUO` flag tells `flake8` to only run Dlint lint rules.
 
@@ -92,79 +102,7 @@ points for common editors:
 
 Dlint can easily be integrated into CI pipelines, or anything really.
 
-## TravisCI
-
-Include Dlint in your `.travis.yml` configuration file:
-
-```
-language: python
-install:
-    - python -m pip install dlint
-script:
-    - python -m flake8 --select=DUO /path/to/code
-```
-
-## CircleCI
-
-Include Dlint in your `.circleci/config.yml` configuration file:
-
-```
-version: 2
-jobs:
-    build:
-        docker:
-            - image: circleci/python
-        steps:
-            - checkout
-            - run: python -m pip install dlint
-            - run: python -m flake8 --select=DUO /path/to/code
-```
-
-## Gitlab
-
-Include Dlint in your `.gitlab-ci.yml` configuration file:
-
-```
-stages:
-    - test
-test:
-    image: python
-    before_script:
-        - python -m pip install dlint
-    script:
-        - python -m flake8 --select=DUO /path/to/code
-```
-
-## Phabricator
-
-Include Dlint in your [Arcanist](https://secure.phabricator.com/book/phabricator/article/arcanist/)
-linting process via the [`.arclint`](https://secure.phabricator.com/book/phabricator/article/arcanist_lint/)
-configuration file:
-```
-{
-    "linters": {
-        "sample": {
-            "type": "flake8"
-        }
-    }
-}
-```
-
-Dlint rules will automatically be run via `flake8` once it's installed, so the
-standard `flake8` configuration will work. You can also utilize more granular
-control over the linting process:
-
-```
-{
-    "linters": {
-        "sample": {
-            "type": "flake8"
-        },
-        "bin": ["python2.7", "python2"],
-        "flags": ["-m", "flake8", "--select", "DUO"]
-    }
-}
-```
+For more information and examples see ['How can I integrate Dlint into XYZ?'](https://github.com/duo-labs/dlint/tree/master/docs#how-can-i-integrate-dlint-into-xyz).
 
 # Custom Plugins
 
@@ -206,4 +144,10 @@ $ flake8
 
 ```
 $ pytest --cov
+```
+
+## Benchmarking
+
+```
+$ pytest --benchmark-py-file /path/to/python/file tests/test_benchmark/
 ```

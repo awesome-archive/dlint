@@ -26,29 +26,34 @@ class BadSubprocessUseLinter(bad_kwarg_use.BadKwargUseLinter):
     off_by_default = False
 
     _code = 'DUO116'
-    _error_tmpl = 'DUO116 avoid "shell" kwarg with "subprocess" calls'
+    _error_tmpl = 'DUO116 use of "shell=True" is insecure in "subprocess" module'
 
     @property
     def kwargs(self):
         return [
             {
-                "attribute_name": "call",
+                "module_path": "subprocess.call",
                 "kwarg_name": "shell",
                 "predicate": tree.kwarg_present,
             },
             {
-                "attribute_name": "check_call",
+                "module_path": "subprocess.check_call",
                 "kwarg_name": "shell",
                 "predicate": tree.kwarg_present,
             },
             {
-                "attribute_name": "check_output",
+                "module_path": "subprocess.check_output",
                 "kwarg_name": "shell",
                 "predicate": tree.kwarg_present,
             },
             {
-                "attribute_name": "Popen",
+                "module_path": "subprocess.Popen",
                 "kwarg_name": "shell",
                 "predicate": tree.kwarg_present,
             },
+            {
+                "module_path": "subprocess.run",
+                "kwarg_name": "shell",
+                "predicate": tree.kwarg_present,
+            }
         ]

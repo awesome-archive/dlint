@@ -1,20 +1,23 @@
 #!/usr/bin/env python
 
+import sys
 import unittest
 
 import dlint
+
+IS_PYTHON_3_8 = sys.version_info >= (3, 8)
 
 
 class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
 
     def test_empty(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             """
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -22,7 +25,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_not_inlinecallbacks_decorator(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             @other_decorator
             def func(arg):
@@ -31,7 +34,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -39,7 +42,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_name_decorator_with_argument(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             CONST = 5
 
@@ -50,7 +53,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -58,7 +61,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_attribute_decorator_with_argument(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             CONST = 5
 
@@ -69,7 +72,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -77,7 +80,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -89,7 +92,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -97,7 +100,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_nested_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -111,7 +114,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -119,7 +122,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_assign_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -131,7 +134,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -139,7 +142,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_nested_assign_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -153,7 +156,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -161,7 +164,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_missing_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -172,12 +175,12 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = [
             dlint.linters.base.Flake8Result(
-                lineno=4,
+                lineno=5 if IS_PYTHON_3_8 else 4,
                 col_offset=0,
                 message=dlint.linters.InlineCallbacksYieldStatementLinter._error_tmpl
             )
@@ -186,7 +189,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_nested_function_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -203,12 +206,12 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = [
             dlint.linters.base.Flake8Result(
-                lineno=4,
+                lineno=5 if IS_PYTHON_3_8 else 4,
                 col_offset=0,
                 message=dlint.linters.InlineCallbacksYieldStatementLinter._error_tmpl
             )
@@ -217,7 +220,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_nested_class_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -235,12 +238,12 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = [
             dlint.linters.base.Flake8Result(
-                lineno=4,
+                lineno=5 if IS_PYTHON_3_8 else 4,
                 col_offset=0,
                 message=dlint.linters.InlineCallbacksYieldStatementLinter._error_tmpl
             )
@@ -249,7 +252,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_nested_function_missing_yield_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -267,12 +270,12 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = [
             dlint.linters.base.Flake8Result(
-                lineno=8,
+                lineno=9 if IS_PYTHON_3_8 else 8,
                 col_offset=4,
                 message=dlint.linters.InlineCallbacksYieldStatementLinter._error_tmpl
             )
@@ -281,7 +284,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_only_raise_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -292,7 +295,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -300,7 +303,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_multiple_raise_statements(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -312,7 +315,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -320,7 +323,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_only_pass_statement(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -331,7 +334,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -339,7 +342,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_raise_statement_with_docstring(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -352,7 +355,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []
@@ -360,7 +363,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_raise_with_missing_yield(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -373,12 +376,12 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = [
             dlint.linters.base.Flake8Result(
-                lineno=4,
+                lineno=5 if IS_PYTHON_3_8 else 4,
                 col_offset=0,
                 message=dlint.linters.InlineCallbacksYieldStatementLinter._error_tmpl
             )
@@ -387,7 +390,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         assert result == expected
 
     def test_raise_with_yield(self):
-        python_string = self.get_ast_node(
+        python_node = self.get_ast_node(
             """
             from twisted.internet import defer
 
@@ -401,7 +404,7 @@ class TestInlineCallbacksYieldStatement(dlint.test.base.BaseTest):
         )
 
         linter = dlint.linters.InlineCallbacksYieldStatementLinter()
-        linter.visit(python_string)
+        linter.visit(python_node)
 
         result = linter.get_results()
         expected = []

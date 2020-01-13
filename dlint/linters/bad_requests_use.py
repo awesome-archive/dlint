@@ -21,48 +21,48 @@ class BadRequestsUseLinter(bad_kwarg_use.BadKwargUseLinter):
     off_by_default = False
 
     _code = 'DUO123'
-    _error_tmpl = 'DUO123 enable SSL verification when using "requests" module'
+    _error_tmpl = 'DUO123 use of "verify=False" is insecure in "requests" module'
 
     @property
     def kwargs(self):
         return [
             {
-                "attribute_name": "request",
+                "module_path": "requests.request",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "get",
+                "module_path": "requests.get",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "options",
+                "module_path": "requests.options",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "head",
+                "module_path": "requests.head",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "post",
+                "module_path": "requests.post",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "put",
+                "module_path": "requests.put",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "patch",
+                "module_path": "requests.patch",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },
             {
-                "attribute_name": "delete",
+                "module_path": "requests.delete",
                 "kwarg_name": "verify",
                 "predicate": tree.kwarg_false,
             },

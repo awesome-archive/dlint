@@ -8,7 +8,6 @@ from __future__ import (
 )
 
 import abc
-import ast
 
 from .. import base
 from ... import tree
@@ -19,12 +18,6 @@ class BadModuleAttributeUseLinter(base.BaseLinter, util.ABC):
     """This abstract base class provides an simple interface for creating new
     lint rules that block bad attributes within a module.
     """
-
-    def __init__(self, *args, **kwargs):
-        self.illegal_wildcard_imports = []
-        self.illegal_calls = []
-
-        super(BadModuleAttributeUseLinter, self).__init__(*args, **kwargs)
 
     @property
     @abc.abstractmethod
@@ -40,74 +33,58 @@ class BadModuleAttributeUseLinter(base.BaseLinter, util.ABC):
             }
         """
 
+    def __init__(self, *args, **kwargs):
+        self.bad_nodes = []
+
+        super(BadModuleAttributeUseLinter, self).__init__(*args, **kwargs)
+
     def get_results(self):
-        used_illegal_attributes = [
-            attributes
-            for module, attributes in self.illegal_module_attributes.items()
-            if module in self.illegal_wildcard_imports
+
+        return [
+            base.Flake8Result(
+                lineno=node.lineno,
+                col_offset=node.col_offset,
+                message=self._error_tmpl
+            )
+            for node in self.bad_nodes
         ]
 
-        self.results.extend([
-            base.Flake8Result(
-                lineno=node.lineno,
-                col_offset=node.col_offset,
-                message=self._error_tmpl
-            )
-            for node in self.illegal_calls
-            if any(
-                node.func.id in attributes
-                for attributes in used_illegal_attributes
-            )
-        ])
+    def visit_Name(self, node):
+        def illegal_import_with_name_resolution(name, attributes, illegal_module_path):
+            if name in attributes:
+                resolved_name = name
+            else:
+                resolved_name = self.namespace.asname_to_name(name)
+                if resolved_name not in attributes:
+                    return False
 
-        return self.results
-
-    def visit_Call(self, node):
-        self.generic_visit(node)
-
-        if isinstance(node.func, ast.Name):
-            illegal_call = any(
-                node.func.id in illegal_attributes
-                for illegal_attributes in self.illegal_module_attributes.values()
+            return self.namespace.illegal_module_imported(
+                resolved_name,
+                illegal_module_path + "." + resolved_name
             )
 
-            if illegal_call:
-                self.illegal_calls.append(node)
+        illegal_call_use = any(
+            illegal_import_with_name_resolution(
+                node.id,
+                attributes,
+                illegal_module_path
+            )
+            for illegal_module_path, attributes in self.illegal_module_attributes.items()
+        )
+
+        if illegal_call_use:
+            self.bad_nodes.append(node)
 
     def visit_Attribute(self, node):
-        if isinstance(node.value, (ast.Attribute, ast.Name)):
-            module_path = '.'.join(tree.module_path(node.value))
+        self.generic_visit(node)
 
-            illegal_attribute_use = any(
-                module_path == module and node.attr in attributes
-                for module, attributes in self.illegal_module_attributes.items()
-            )
+        module_path = tree.module_path_str(node.value)
 
-            if illegal_attribute_use:
-                self.results.append(
-                    base.Flake8Result(
-                        lineno=node.lineno,
-                        col_offset=node.col_offset,
-                        message=self._error_tmpl
-                    )
-                )
-
-    def visit_ImportFrom(self, node):
-        wildcard_import = any(
-            alias.name == '*'
-            for alias in node.names
+        illegal_attribute_use = any(
+            node.attr in attributes
+            and self.namespace.illegal_module_imported(module_path, illegal_module_path)
+            for illegal_module_path, attributes in self.illegal_module_attributes.items()
         )
-        if wildcard_import and node.module in self.illegal_module_attributes.keys():
-            self.illegal_wildcard_imports.append(node.module)
 
-        self.results.extend([
-            base.Flake8Result(
-                lineno=node.lineno,
-                col_offset=node.col_offset,
-                message=self._error_tmpl
-            )
-            for module, attributes in self.illegal_module_attributes.items()
-            if node.module == module and any(
-                alias.name in attributes for alias in node.names
-            )
-        ])
+        if illegal_attribute_use:
+            self.bad_nodes.append(node)

@@ -10,8 +10,8 @@ from __future__ import (
 import ast
 import sys
 
-from . import base
-from .. import tree
+from .. import base
+from ... import tree
 
 
 class YieldReturnStatementLinter(base.BaseLinter):
@@ -22,7 +22,7 @@ class YieldReturnStatementLinter(base.BaseLinter):
     off_by_default = False
 
     _code = 'DUO101'
-    _error_tmpl = 'DUO101 inlineCallbacks function cannot have non-empty return statement'
+    _error_tmpl = 'DUO101 "inlineCallbacks" function cannot have non-empty "return" statement'
 
     def visit_FunctionDef(self, node):
         self.generic_visit(node)

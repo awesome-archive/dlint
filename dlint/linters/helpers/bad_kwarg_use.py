@@ -28,14 +28,14 @@ class BadKwargUseLinter(base.BaseLinter, util.ABC):
 
             [
                 {
-                    "attribute_name": "name1",
+                    "module_path": "mod1.mod2.name1",
                     "kwarg_name": "kwarg1",
                     "predicate": <function>,
                 },
             ]
 
-        Which would represent 'name1(kwarg1=...)' where 'predicate' is a
-        function that takes the Call object and a kwarg name and returns
+        Which would represent 'mod1.mod2.name1(kwarg1=...)' where 'predicate'
+        is a function that takes the Call object and a kwarg name and returns
         True|False.
         """
 
@@ -47,7 +47,10 @@ class BadKwargUseLinter(base.BaseLinter, util.ABC):
 
         bad_kwarg = any(
             (
-                kwarg["attribute_name"] == tree.call_name(node)
+                self.namespace.illegal_module_imported(
+                    tree.module_path_str(node.func),
+                    kwarg["module_path"]
+                )
                 and kwarg["predicate"](node, kwarg["kwarg_name"])
             )
             for kwarg in self.kwargs

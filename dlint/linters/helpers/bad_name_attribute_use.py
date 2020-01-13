@@ -34,8 +34,8 @@ class BadNameAttributeUseLinter(base.BaseLinter, util.ABC):
 
             {
                 "object_attribute": [
-                    ["module_name1", "module_name2"],
-                    ["module_name3", "module_name4"],
+                    "parent_module_name1.child_module_name1",
+                    "parent_module_name2.child_module_name2",
                 ]
             }
         """
@@ -50,7 +50,7 @@ class BadNameAttributeUseLinter(base.BaseLinter, util.ABC):
                     and isinstance(inner_node.value, ast.Call)):
                 return
 
-            module_path = tree.module_path(inner_node.value.func)
+            module_path = tree.module_path_str(inner_node.value.func)
             targets.extend([
                 Assignment(
                     variable=target.id,
@@ -79,7 +79,13 @@ class BadNameAttributeUseLinter(base.BaseLinter, util.ABC):
                 target for target in targets
                 if target.variable == variable
                 and attribute in self.illegal_name_attributes
-                and target.module_path in self.illegal_name_attributes[attribute]
+                and any(
+                    self.namespace.illegal_module_imported(
+                        target.module_path,
+                        illegal_name
+                    )
+                    for illegal_name in self.illegal_name_attributes[attribute]
+                )
             ]
 
             try:
@@ -107,3 +113,6 @@ class BadNameAttributeUseLinter(base.BaseLinter, util.ABC):
             )
             for result in results
         ])
+
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node)

@@ -18,21 +18,17 @@ class BadTarfileUseLinter(bad_name_attribute_use.BadNameAttributeUseLinter):
     off_by_default = False
 
     _code = 'DUO115'
-    _error_tmpl = 'DUO115 use of "extract|extractall" not allowed'
+    _error_tmpl = 'DUO115 use of "extract|extractall" is insecure'
 
     @property
     def illegal_name_attributes(self):
         return {
             "extract": [
-                ["tarfile", "TarFile", "open"],
-                ["tarfile", "TarFile"],
-                ["TarFile", "open"],
-                ["TarFile"],
+                "tarfile.TarFile.open",
+                "tarfile.TarFile",
             ],
             "extractall": [
-                ["tarfile", "TarFile", "open"],
-                ["tarfile", "TarFile"],
-                ["TarFile", "open"],
-                ["TarFile"],
+                "tarfile.TarFile.open",
+                "tarfile.TarFile",
             ]
         }
